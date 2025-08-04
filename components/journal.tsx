@@ -36,28 +36,16 @@ interface JournalEntry {
   attachments?: string[];
 }
 
-export function Journal() {
-  const [entries, setEntries] = useState<JournalEntry[]>([
-    {
-      id: 1,
-      date: "2024-01-15",
-      title: "Strong Week - Breakout Strategy Working",
-      content:
-        "Had an excellent week focusing on breakout patterns. The key was waiting for volume confirmation before entering positions. My patience paid off with AAPL and TSLA trades. Need to continue this disciplined approach and avoid FOMO entries.",
-      mood: "confident",
-      tags: ["Breakouts", "Discipline", "Volume Analysis"],
-    },
-    {
-      id: 2,
-      date: "2024-01-18",
-      title: "Learning from Mistakes",
-      content:
-        "Made a mistake with the SPY trade today. Entered too early without proper confirmation. The setup looked good but I didn't wait for the full pattern to complete. This cost me $480. Important lesson: stick to the rules even when the setup looks 'obvious'.",
-      mood: "reflective",
-      tags: ["Mistakes", "Patience", "Rules"],
-    },
-  ]);
+interface JournalProps {
+  entries: JournalEntry[];
+  onSaveEntry: (
+    newEntryData: Omit<JournalEntry, "id" | "date">,
+    editingId?: number
+  ) => void;
+  onDeleteEntry: (id: number) => void;
+}
 
+export function Journal({ entries, onSaveEntry, onDeleteEntry }: JournalProps) {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [newEntry, setNewEntry] = useState({
@@ -78,28 +66,11 @@ export function Journal() {
       )
   );
 
-  const saveEntry = () => {
+  const handleSaveEntry = () => {
     if (newEntry.title && newEntry.content) {
-      if (editingEntry) {
-        // Update existing entry
-        setEntries(
-          entries.map((entry) =>
-            entry.id === editingEntry.id
-              ? { ...newEntry, id: editingEntry.id, date: editingEntry.date }
-              : entry
-          )
-        );
-        setEditingEntry(null);
-      } else {
-        // Add new entry
-        const entry: JournalEntry = {
-          id: Date.now(), // Unique ID for new entries
-          date: new Date().toISOString().split("T")[0],
-          ...newEntry,
-        };
-        setEntries([entry, ...entries]);
-      }
+      onSaveEntry(newEntry, editingEntry?.id);
       setNewEntry({ title: "", content: "", mood: "", tags: [] });
+      setEditingEntry(null);
       setShowForm(false);
     }
   };
@@ -116,7 +87,7 @@ export function Journal() {
   };
 
   const handleDeleteEntry = (id: number) => {
-    setEntries(entries.filter((entry) => entry.id !== id));
+    onDeleteEntry(id);
   };
 
   const addTag = () => {
@@ -248,7 +219,7 @@ export function Journal() {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={saveEntry}>
+              <Button onClick={handleSaveEntry}>
                 {editingEntry ? "Update Entry" : "Save Entry"}
               </Button>
               <Button variant="outline" onClick={handleCancelForm}>
