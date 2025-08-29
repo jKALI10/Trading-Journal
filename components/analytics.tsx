@@ -1,11 +1,30 @@
-"use client"
+"use client";
 
-import { Label } from "@/components/ui/label"
-import { BarChart3, Calendar, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Activity } from "lucide-react"
+import { Label } from "@/components/ui/label";
+import {
+  BarChart3,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  TrendingDown,
+  TrendingUp,
+  Activity,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
 
-import { useMemo, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { useMemo, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import {
   LineChart,
   Line,
@@ -18,190 +37,224 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import type { DateRange } from "react-day-picker"
-import { DatePickerWithRange } from "@/components/date-picker-with-range"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import type { DateRange } from "react-day-picker";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Trade {
-  id: number
-  date: string
-  symbol: string
-  direction: "long" | "short"
-  positionSize: number
-  notes: string
-  tags: string[]
-  outcome: "win" | "loss"
-  pnl: number
+  id: number;
+  date: string;
+  symbol: string;
+  direction: "long" | "short";
+  positionSize: number;
+  notes: string;
+  tags: string[];
+  outcome: "win" | "loss";
+  pnl: number;
 }
 
 interface AnalyticsProps {
-  trades: Trade[]
+  trades: Trade[];
 }
 
 export function Analytics({ trades }: AnalyticsProps) {
-  const [equityChartType, setEquityChartType] = useState<"line" | "bar">("line")
-  const [dailyPnLChartType, setDailyPnLChartType] = useState<"line" | "bar">("line")
-  const [chartColor, setChartColor] = useState<string>("hsl(var(--chart-1))")
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
-  const [activeTab, setActiveTab] = useState("charts")
+  const [equityChartType, setEquityChartType] = useState<"line" | "bar">(
+    "line"
+  );
+  const [dailyPnLChartType, setDailyPnLChartType] = useState<"line" | "bar">(
+    "line"
+  );
+  const [chartColor, setChartColor] = useState<string>("hsl(var(--chart-1))");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState("charts");
 
   // Calendar specific state
-  const [calendarDate, setCalendarDate] = useState(new Date())
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null)
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<
+    string | null
+  >(null);
 
   // Filter trades based on date range
   const filteredTrades = useMemo(() => {
     if (!dateRange?.from) {
-      return trades
+      return trades;
     }
-    const fromDate = dateRange.from.toISOString().split("T")[0]
-    const toDate = dateRange.to ? dateRange.to.toISOString().split("T")[0] : fromDate
+    const fromDate = dateRange.from.toISOString().split("T")[0];
+    const toDate = dateRange.to
+      ? dateRange.to.toISOString().split("T")[0]
+      : fromDate;
 
     return trades.filter((trade) => {
-      const tradeDate = trade.date
-      return tradeDate >= fromDate && tradeDate <= toDate
-    })
-  }, [trades, dateRange])
+      const tradeDate = trade.date;
+      return tradeDate >= fromDate && tradeDate <= toDate;
+    });
+  }, [trades, dateRange]);
 
   // Memoized calculations for key metrics
-  const winningTrades = useMemo(() => filteredTrades.filter((trade) => trade.outcome === "win"), [filteredTrades])
-  const losingTrades = useMemo(() => filteredTrades.filter((trade) => trade.outcome === "loss"), [filteredTrades])
+  const winningTrades = useMemo(
+    () => filteredTrades.filter((trade) => trade.outcome === "win"),
+    [filteredTrades]
+  );
+  const losingTrades = useMemo(
+    () => filteredTrades.filter((trade) => trade.outcome === "loss"),
+    [filteredTrades]
+  );
 
   const winRate = useMemo(
-    () => (filteredTrades.length > 0 ? (winningTrades.length / filteredTrades.length) * 100 : 0),
-    [filteredTrades.length, winningTrades.length],
-  )
+    () =>
+      filteredTrades.length > 0
+        ? (winningTrades.length / filteredTrades.length) * 100
+        : 0,
+    [filteredTrades.length, winningTrades.length]
+  );
 
-  const totalWins = useMemo(() => winningTrades.reduce((sum, trade) => sum + trade.pnl, 0), [winningTrades])
-  const totalLosses = useMemo(() => Math.abs(losingTrades.reduce((sum, trade) => sum + trade.pnl, 0)), [losingTrades])
+  const totalWins = useMemo(
+    () => winningTrades.reduce((sum, trade) => sum + trade.pnl, 0),
+    [winningTrades]
+  );
+  const totalLosses = useMemo(
+    () => Math.abs(losingTrades.reduce((sum, trade) => sum + trade.pnl, 0)),
+    [losingTrades]
+  );
   const avgWin = useMemo(
     () => (winningTrades.length > 0 ? totalWins / winningTrades.length : 0),
-    [winningTrades.length, totalWins],
-  )
+    [winningTrades.length, totalWins]
+  );
   const avgLoss = useMemo(
     () => (losingTrades.length > 0 ? totalLosses / losingTrades.length : 0),
-    [losingTrades.length, totalLosses],
-  )
-  const profitFactor = useMemo(() => (totalLosses > 0 ? totalWins / totalLosses : 0), [totalWins, totalLosses])
-  const totalPnL = useMemo(() => totalWins - totalLosses, [totalWins, totalLosses])
+    [losingTrades.length, totalLosses]
+  );
+  const profitFactor = useMemo(
+    () => (totalLosses > 0 ? totalWins / totalLosses : 0),
+    [totalWins, totalLosses]
+  );
+  const totalPnL = useMemo(
+    () => totalWins - totalLosses,
+    [totalWins, totalLosses]
+  );
 
   const avgTradePnL = useMemo(
     () => (filteredTrades.length > 0 ? totalPnL / filteredTrades.length : 0),
-    [filteredTrades.length, totalPnL],
-  )
+    [filteredTrades.length, totalPnL]
+  );
 
   // Equity curve data
   const equityCurve = useMemo(() => {
-    let runningTotal = 0
+    let runningTotal = 0;
     return filteredTrades.map((trade, index) => {
       if (trade.outcome === "win") {
-        runningTotal += trade.pnl
+        runningTotal += trade.pnl;
       } else {
-        runningTotal -= Math.abs(trade.pnl)
+        runningTotal -= Math.abs(trade.pnl);
       }
       return {
         trade: index + 1,
         equity: runningTotal,
         date: trade.date,
-      }
-    })
-  }, [filteredTrades])
+      };
+    });
+  }, [filteredTrades]);
 
   // Monthly performance
   const monthlyChart = useMemo(() => {
-    const monthlyData = filteredTrades.reduce(
-      (acc, trade) => {
-        const month = trade.date.substring(0, 7) // YYYY-MM
-        if (!acc[month]) {
-          acc[month] = { month, pnl: 0, trades: 0 }
-        }
-        if (trade.outcome === "win") {
-          acc[month].pnl += trade.pnl
-        } else {
-          acc[month].pnl -= Math.abs(trade.pnl)
-        }
-        acc[month].trades += 1
-        return acc
-      },
-      {} as Record<string, { month: string; pnl: number; trades: number }>,
-    )
-    return Object.values(monthlyData)
-  }, [filteredTrades])
+    const monthlyData = filteredTrades.reduce((acc, trade) => {
+      const month = trade.date.substring(0, 7); // YYYY-MM
+      if (!acc[month]) {
+        acc[month] = { month, pnl: 0, trades: 0 };
+      }
+      if (trade.outcome === "win") {
+        acc[month].pnl += trade.pnl;
+      } else {
+        acc[month].pnl -= Math.abs(trade.pnl);
+      }
+      acc[month].trades += 1;
+      return acc;
+    }, {} as Record<string, { month: string; pnl: number; trades: number }>);
+    return Object.values(monthlyData);
+  }, [filteredTrades]);
 
   // Daily P&L
   const dailyPnLChart = useMemo(() => {
-    const dailyData = filteredTrades.reduce(
-      (acc, trade) => {
-        const date = trade.date // YYYY-MM-DD
-        if (!acc[date]) {
-          acc[date] = { date, pnl: 0 }
-        }
-        if (trade.outcome === "win") {
-          acc[date].pnl += trade.pnl
-        } else {
-          acc[date].pnl -= Math.abs(trade.pnl)
-        }
-        return acc
-      },
-      {} as Record<string, { date: string; pnl: number }>,
-    )
-    return Object.values(dailyData).sort((a, b) => a.date.localeCompare(b.date))
-  }, [filteredTrades])
+    const dailyData = filteredTrades.reduce((acc, trade) => {
+      const date = trade.date; // YYYY-MM-DD
+      if (!acc[date]) {
+        acc[date] = { date, pnl: 0 };
+      }
+      if (trade.outcome === "win") {
+        acc[date].pnl += trade.pnl;
+      } else {
+        acc[date].pnl -= Math.abs(trade.pnl);
+      }
+      return acc;
+    }, {} as Record<string, { date: string; pnl: number }>);
+    return Object.values(dailyData).sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
+  }, [filteredTrades]);
 
   // Symbol performance
   const symbolChart = useMemo(() => {
-    const symbolPerformance = filteredTrades.reduce(
-      (acc, trade) => {
-        if (!acc[trade.symbol]) {
-          acc[trade.symbol] = { symbol: trade.symbol, pnl: 0, count: 0 }
-        }
-        if (trade.outcome === "win") {
-          acc[trade.symbol].pnl += trade.pnl
-        } else {
-          acc[trade.symbol].pnl -= Math.abs(trade.pnl)
-        }
-        acc[trade.symbol].count += 1
-        return acc
-      },
-      {} as Record<string, { symbol: string; pnl: number; count: number }>,
-    )
-    return Object.values(symbolPerformance)
-  }, [filteredTrades])
+    const symbolPerformance = filteredTrades.reduce((acc, trade) => {
+      if (!acc[trade.symbol]) {
+        acc[trade.symbol] = { symbol: trade.symbol, pnl: 0, count: 0 };
+      }
+      if (trade.outcome === "win") {
+        acc[trade.symbol].pnl += trade.pnl;
+      } else {
+        acc[trade.symbol].pnl -= Math.abs(trade.pnl);
+      }
+      acc[trade.symbol].count += 1;
+      return acc;
+    }, {} as Record<string, { symbol: string; pnl: number; count: number }>);
+    return Object.values(symbolPerformance);
+  }, [filteredTrades]);
 
   // Strategy performance (using tags)
   const strategyChart = useMemo(() => {
-    const strategyPerformance: Record<string, { strategy: string; pnl: number; count: number }> = {}
+    const strategyPerformance: Record<
+      string,
+      { strategy: string; pnl: number; count: number }
+    > = {};
     filteredTrades.forEach((trade) => {
       if (trade.tags.length === 0) {
         // Assign to 'Untagged' if no tags
         if (!strategyPerformance["Untagged"]) {
-          strategyPerformance["Untagged"] = { strategy: "Untagged", pnl: 0, count: 0 }
+          strategyPerformance["Untagged"] = {
+            strategy: "Untagged",
+            pnl: 0,
+            count: 0,
+          };
         }
         if (trade.outcome === "win") {
-          strategyPerformance["Untagged"].pnl += trade.pnl
+          strategyPerformance["Untagged"].pnl += trade.pnl;
         } else {
-          strategyPerformance["Untagged"].pnl -= Math.abs(trade.pnl)
+          strategyPerformance["Untagged"].pnl -= Math.abs(trade.pnl);
         }
-        strategyPerformance["Untagged"].count += 1
+        strategyPerformance["Untagged"].count += 1;
       } else {
         trade.tags.forEach((tag) => {
           if (!strategyPerformance[tag]) {
-            strategyPerformance[tag] = { strategy: tag, pnl: 0, count: 0 }
+            strategyPerformance[tag] = { strategy: tag, pnl: 0, count: 0 };
           }
           if (trade.outcome === "win") {
-            strategyPerformance[tag].pnl += trade.pnl
+            strategyPerformance[tag].pnl += trade.pnl;
           } else {
-            strategyPerformance[tag].pnl -= Math.abs(trade.pnl)
+            strategyPerformance[tag].pnl -= Math.abs(trade.pnl);
           }
-          strategyPerformance[tag].count += 1
-        })
+          strategyPerformance[tag].count += 1;
+        });
       }
-    })
-    return Object.values(strategyPerformance).sort((a, b) => b.pnl - a.pnl)
-  }, [filteredTrades])
+    });
+    return Object.values(strategyPerformance).sort((a, b) => b.pnl - a.pnl);
+  }, [filteredTrades]);
 
   // Win/Loss pie chart
   const outcomeData = useMemo(
@@ -209,106 +262,112 @@ export function Analytics({ trades }: AnalyticsProps) {
       { name: "Wins", value: winningTrades.length, color: "#22c55e" },
       { name: "Losses", value: losingTrades.length, color: "#ef4444" },
     ],
-    [winningTrades.length, losingTrades.length],
-  )
+    [winningTrades.length, losingTrades.length]
+  );
 
   // Longest winning/losing streak
   const { longestWinningStreak, longestLosingStreak } = useMemo(() => {
-    let currentWinningStreak = 0
-    let maxWinningStreak = 0
-    let currentLosingStreak = 0
-    let maxLosingStreak = 0
+    let currentWinningStreak = 0;
+    let maxWinningStreak = 0;
+    let currentLosingStreak = 0;
+    let maxLosingStreak = 0;
 
     filteredTrades.forEach((trade) => {
       if (trade.outcome === "win") {
-        currentWinningStreak++
-        currentLosingStreak = 0
+        currentWinningStreak++;
+        currentLosingStreak = 0;
       } else {
-        currentLosingStreak++
-        currentWinningStreak = 0
+        currentLosingStreak++;
+        currentWinningStreak = 0;
       }
-      maxWinningStreak = Math.max(maxWinningStreak, currentWinningStreak)
-      maxLosingStreak = Math.max(maxLosingStreak, currentLosingStreak)
-    })
-    return { longestWinningStreak: maxWinningStreak, longestLosingStreak: maxLosingStreak }
-  }, [filteredTrades])
+      maxWinningStreak = Math.max(maxWinningStreak, currentWinningStreak);
+      maxLosingStreak = Math.max(maxLosingStreak, currentLosingStreak);
+    });
+    return {
+      longestWinningStreak: maxWinningStreak,
+      longestLosingStreak: maxLosingStreak,
+    };
+  }, [filteredTrades]);
 
   // Calendar specific calculations
-  const calendarMonth = calendarDate.getMonth()
-  const calendarYear = calendarDate.getFullYear()
+  const calendarMonth = calendarDate.getMonth();
+  const calendarYear = calendarDate.getFullYear();
 
   // Navigate calendar months
   const navigateCalendarMonth = (direction: "prev" | "next") => {
-    const newDate = new Date(calendarDate)
+    const newDate = new Date(calendarDate);
     if (direction === "prev") {
-      newDate.setMonth(calendarMonth - 1)
+      newDate.setMonth(calendarMonth - 1);
     } else {
-      newDate.setMonth(calendarMonth + 1)
+      newDate.setMonth(calendarMonth + 1);
     }
-    setCalendarDate(newDate)
-  }
+    setCalendarDate(newDate);
+  };
 
   // Calendar daily P&L
   const calendarDailyPnL = useMemo(() => {
-    const dailyData: Record<string, { pnl: number; trades: number }> = {}
+    const dailyData: Record<string, { pnl: number; trades: number }> = {};
 
     trades.forEach((trade) => {
-      const tradeDate = trade.date
+      const tradeDate = trade.date;
       if (!dailyData[tradeDate]) {
-        dailyData[tradeDate] = { pnl: 0, trades: 0 }
+        dailyData[tradeDate] = { pnl: 0, trades: 0 };
       }
 
       if (trade.outcome === "win") {
-        dailyData[tradeDate].pnl += trade.pnl
+        dailyData[tradeDate].pnl += trade.pnl;
       } else {
-        dailyData[tradeDate].pnl -= Math.abs(trade.pnl)
+        dailyData[tradeDate].pnl -= Math.abs(trade.pnl);
       }
-      dailyData[tradeDate].trades += 1
-    })
+      dailyData[tradeDate].trades += 1;
+    });
 
-    return dailyData
-  }, [trades])
+    return dailyData;
+  }, [trades]);
 
   // Calendar monthly P&L
   const calendarMonthlyPnL = useMemo(() => {
-    const monthKey = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}`
-    let totalPnL = 0
-    let totalDays = 0
+    const monthKey = `${calendarYear}-${String(calendarMonth + 1).padStart(
+      2,
+      "0"
+    )}`;
+    let totalPnL = 0;
+    let totalDays = 0;
 
     Object.entries(calendarDailyPnL).forEach(([date, data]) => {
       if (date.startsWith(monthKey)) {
-        totalPnL += data.pnl
-        totalDays += 1
+        totalPnL += data.pnl;
+        totalDays += 1;
       }
-    })
+    });
 
-    return { totalPnL, totalDays }
-  }, [calendarDailyPnL, calendarMonth, calendarYear])
+    return { totalPnL, totalDays };
+  }, [calendarDailyPnL, calendarMonth, calendarYear]);
 
   // Generate calendar days
   const calendarDays = useMemo(() => {
-    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate()
-    const firstDay = new Date(calendarYear, calendarMonth, 1).getDay()
-    const days = []
+    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+    const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+    const days = [];
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
-      days.push(null)
+      days.push(null);
     }
 
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day)
+      days.push(day);
     }
 
-    return days
-  }, [calendarDate, calendarMonth, calendarYear])
+    return days;
+  }, [calendarDate, calendarMonth, calendarYear]);
 
   // Get selected date trades
   const selectedDateTrades = useMemo(() => {
-    if (!selectedCalendarDate) return []
-    return trades.filter((trade) => trade.date === selectedCalendarDate)
-  }, [trades, selectedCalendarDate])
+    if (!selectedCalendarDate) return [];
+    return trades.filter((trade) => trade.date === selectedCalendarDate);
+  }, [trades, selectedCalendarDate]);
 
   // Month names
   const monthNames = [
@@ -324,28 +383,33 @@ export function Analytics({ trades }: AnalyticsProps) {
     "October",
     "November",
     "December",
-  ]
+  ];
 
   // Get day cell styling
   const getDayCellStyling = (day: number) => {
-    const dateKey = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-    const dayData = calendarDailyPnL[dateKey]
-    const isSelected = selectedCalendarDate === dateKey
-    const isToday = new Date().toDateString() === new Date(calendarYear, calendarMonth, day).toDateString()
+    const dateKey = `${calendarYear}-${String(calendarMonth + 1).padStart(
+      2,
+      "0"
+    )}-${String(day).padStart(2, "0")}`;
+    const dayData = calendarDailyPnL[dateKey];
+    const isSelected = selectedCalendarDate === dateKey;
+    const isToday =
+      new Date().toDateString() ===
+      new Date(calendarYear, calendarMonth, day).toDateString();
 
     let className =
-      "h-16 w-full border border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer flex flex-col items-center justify-center text-sm rounded-md"
+      "h-16 w-full border border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer flex flex-col items-center justify-center text-sm rounded-md";
 
     if (isSelected) {
-      className += " ring-2 ring-primary"
+      className += " ring-2 ring-primary";
     }
 
     if (isToday) {
-      className += " bg-primary/10"
+      className += " bg-primary/10";
     }
 
-    return { className, dayData }
-  }
+    return { className, dayData };
+  };
 
   if (filteredTrades.length === 0) {
     return (
@@ -358,18 +422,23 @@ export function Analytics({ trades }: AnalyticsProps) {
           <CardContent className="text-center py-12">
             <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No data to analyze</h3>
-            <p className="text-muted-foreground">Add some trades or adjust your filters to see performance analytics</p>
+            <p className="text-muted-foreground">
+              Add some trades or adjust your filters to see performance
+              analytics
+            </p>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">Detailed performance analysis and calendar view</p>
+        <p className="text-muted-foreground">
+          Detailed performance analysis and calendar view
+        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -383,16 +452,52 @@ export function Analytics({ trades }: AnalyticsProps) {
           <Card>
             <CardHeader>
               <CardTitle>Analytics Filters & Customization</CardTitle>
-              <CardDescription>Adjust the data range and chart display options</CardDescription>
+              <CardDescription>
+                Adjust the data range and chart display options
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="date-range">Date Range</Label>
-                <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+                <div className="flex gap-2">
+                  <Input
+                    type="date"
+                    placeholder="From date"
+                    onChange={(e) => {
+                      const fromDate = e.target.value
+                        ? new Date(e.target.value)
+                        : undefined;
+                      setDateRange(
+                        fromDate
+                          ? { from: fromDate, to: dateRange?.to }
+                          : undefined
+                      );
+                    }}
+                  />
+                  <Input
+                    type="date"
+                    placeholder="To date"
+                    onChange={(e) => {
+                      const toDate = e.target.value
+                        ? new Date(e.target.value)
+                        : undefined;
+                      setDateRange(
+                        dateRange?.from
+                          ? { from: dateRange.from, to: toDate }
+                          : undefined
+                      );
+                    }}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="equity-chart-type">Equity Chart Type</Label>
-                <Select value={equityChartType} onValueChange={(value: "line" | "bar") => setEquityChartType(value)}>
+                <Select
+                  value={equityChartType}
+                  onValueChange={(value: "line" | "bar") =>
+                    setEquityChartType(value)
+                  }
+                >
                   <SelectTrigger id="equity-chart-type">
                     <SelectValue placeholder="Select chart type" />
                   </SelectTrigger>
@@ -403,10 +508,14 @@ export function Analytics({ trades }: AnalyticsProps) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="daily-pnl-chart-type">Daily P&L Chart Type</Label>
+                <Label htmlFor="daily-pnl-chart-type">
+                  Daily P&L Chart Type
+                </Label>
                 <Select
                   value={dailyPnLChartType}
-                  onValueChange={(value: "line" | "bar") => setDailyPnLChartType(value)}
+                  onValueChange={(value: "line" | "bar") =>
+                    setDailyPnLChartType(value)
+                  }
                 >
                   <SelectTrigger id="daily-pnl-chart-type">
                     <SelectValue placeholder="Select chart type" />
@@ -424,7 +533,9 @@ export function Analytics({ trades }: AnalyticsProps) {
                     <SelectValue placeholder="Select chart color" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="hsl(var(--chart-1))">Default (Orange)</SelectItem>
+                    <SelectItem value="hsl(var(--chart-1))">
+                      Default (Orange)
+                    </SelectItem>
                     <SelectItem value="hsl(var(--chart-2))">Green</SelectItem>
                     <SelectItem value="hsl(var(--chart-3))">Blue</SelectItem>
                     <SelectItem value="hsl(var(--chart-4))">Yellow</SelectItem>
@@ -451,11 +562,17 @@ export function Analytics({ trades }: AnalyticsProps) {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Profit Factor</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Profit Factor
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{profitFactor.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Gross profit / Gross loss</p>
+                <div className="text-2xl font-bold">
+                  {profitFactor.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Gross profit / Gross loss
+                </p>
               </CardContent>
             </Card>
 
@@ -464,7 +581,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                 <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${totalPnL >= 0 ? "text-green-600" : "text-red-600"}`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    totalPnL >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   {totalPnL >= 0 ? "+" : ""}${totalPnL.toFixed(2)}
                 </div>
                 <p className="text-xs text-muted-foreground">Net profit/loss</p>
@@ -473,7 +594,9 @@ export function Analytics({ trades }: AnalyticsProps) {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Best Trade</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Best Trade
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
@@ -485,33 +608,53 @@ export function Analytics({ trades }: AnalyticsProps) {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Trade P&L</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Avg. Trade P&L
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${avgTradePnL >= 0 ? "text-green-600" : "text-red-600"}`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    avgTradePnL >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   {avgTradePnL >= 0 ? "+" : ""}${avgTradePnL.toFixed(2)}
                 </div>
-                <p className="text-xs text-muted-foreground">Average profit/loss per trade</p>
+                <p className="text-xs text-muted-foreground">
+                  Average profit/loss per trade
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Longest Win Streak</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Longest Win Streak
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{longestWinningStreak}</div>
-                <p className="text-xs text-muted-foreground">Consecutive winning trades</p>
+                <div className="text-2xl font-bold text-green-600">
+                  {longestWinningStreak}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Consecutive winning trades
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Longest Loss Streak</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Longest Loss Streak
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{longestLosingStreak}</div>
-                <p className="text-xs text-muted-foreground">Consecutive losing trades</p>
+                <div className="text-2xl font-bold text-red-600">
+                  {longestLosingStreak}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Consecutive losing trades
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -556,7 +699,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                           <XAxis dataKey="trade" />
                           <YAxis />
                           <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="equity" fill="var(--color-equity)" radius={[4, 4, 0, 0]} />
+                          <Bar
+                            dataKey="equity"
+                            fill="var(--color-equity)"
+                            radius={[4, 4, 0, 0]}
+                          />
                         </BarChart>
                       )}
                     </ResponsiveContainer>
@@ -628,7 +775,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                         <XAxis dataKey="month" />
                         <YAxis />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="pnl" fill="var(--color-pnl)" radius={[4, 4, 0, 0]} />
+                        <Bar
+                          dataKey="pnl"
+                          fill="var(--color-pnl)"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -656,7 +807,13 @@ export function Analytics({ trades }: AnalyticsProps) {
                           <XAxis dataKey="date" />
                           <YAxis />
                           <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line type="monotone" dataKey="pnl" stroke="var(--color-pnl)" strokeWidth={2} dot={false} />
+                          <Line
+                            type="monotone"
+                            dataKey="pnl"
+                            stroke="var(--color-pnl)"
+                            strokeWidth={2}
+                            dot={false}
+                          />
                         </LineChart>
                       ) : (
                         <BarChart data={dailyPnLChart}>
@@ -664,7 +821,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                           <XAxis dataKey="date" />
                           <YAxis />
                           <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="pnl" fill="var(--color-pnl)" radius={[4, 4, 0, 0]} />
+                          <Bar
+                            dataKey="pnl"
+                            fill="var(--color-pnl)"
+                            radius={[4, 4, 0, 0]}
+                          />
                         </BarChart>
                       )}
                     </ResponsiveContainer>
@@ -696,7 +857,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                         <XAxis type="number" />
                         <YAxis dataKey="symbol" type="category" width={80} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="pnl" fill="var(--color-pnl)" radius={[0, 4, 4, 0]} />
+                        <Bar
+                          dataKey="pnl"
+                          fill="var(--color-pnl)"
+                          radius={[0, 4, 4, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -705,7 +870,9 @@ export function Analytics({ trades }: AnalyticsProps) {
               <Card className="w-full lg:w-[calc(50%-12px)]">
                 <CardHeader>
                   <CardTitle>Strategy Performance</CardTitle>
-                  <CardDescription>P&L by trading strategy (tags)</CardDescription>
+                  <CardDescription>
+                    P&L by trading strategy (tags)
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ChartContainer
@@ -723,7 +890,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                         <XAxis type="number" />
                         <YAxis dataKey="strategy" type="category" width={100} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="pnl" fill="var(--color-pnl)" radius={[0, 4, 4, 0]} />
+                        <Bar
+                          dataKey="pnl"
+                          fill="var(--color-pnl)"
+                          radius={[0, 4, 4, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -736,7 +907,9 @@ export function Analytics({ trades }: AnalyticsProps) {
           <Card>
             <CardHeader>
               <CardTitle>Detailed Statistics</CardTitle>
-              <CardDescription>Comprehensive performance metrics</CardDescription>
+              <CardDescription>
+                Comprehensive performance metrics
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-6 md:grid-cols-3">
@@ -744,16 +917,26 @@ export function Analytics({ trades }: AnalyticsProps) {
                   <h4 className="font-semibold">Trade Statistics</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Trades:</span>
+                      <span className="text-muted-foreground">
+                        Total Trades:
+                      </span>
                       <span>{filteredTrades.length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Winning Trades:</span>
-                      <span className="text-green-600">{winningTrades.length}</span>
+                      <span className="text-muted-foreground">
+                        Winning Trades:
+                      </span>
+                      <span className="text-green-600">
+                        {winningTrades.length}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Losing Trades:</span>
-                      <span className="text-red-600">{losingTrades.length}</span>
+                      <span className="text-muted-foreground">
+                        Losing Trades:
+                      </span>
+                      <span className="text-red-600">
+                        {losingTrades.length}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Win Rate:</span>
@@ -767,23 +950,45 @@ export function Analytics({ trades }: AnalyticsProps) {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total P&L:</span>
-                      <span className={totalPnL >= 0 ? "text-green-600" : "text-red-600"}>${totalPnL.toFixed(2)}</span>
+                      <span
+                        className={
+                          totalPnL >= 0 ? "text-green-600" : "text-red-600"
+                        }
+                      >
+                        ${totalPnL.toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Average Win:</span>
-                      <span className="text-green-600">${avgWin.toFixed(2)}</span>
+                      <span className="text-muted-foreground">
+                        Average Win:
+                      </span>
+                      <span className="text-green-600">
+                        ${avgWin.toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Average Loss:</span>
-                      <span className="text-red-600">${avgLoss.toFixed(2)}</span>
+                      <span className="text-muted-foreground">
+                        Average Loss:
+                      </span>
+                      <span className="text-red-600">
+                        ${avgLoss.toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Profit Factor:</span>
+                      <span className="text-muted-foreground">
+                        Profit Factor:
+                      </span>
                       <span>{profitFactor.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Avg. Trade P&L:</span>
-                      <span className={avgTradePnL >= 0 ? "text-green-600" : "text-red-600"}>
+                      <span className="text-muted-foreground">
+                        Avg. Trade P&L:
+                      </span>
+                      <span
+                        className={
+                          avgTradePnL >= 0 ? "text-green-600" : "text-red-600"
+                        }
+                      >
                         {avgTradePnL >= 0 ? "+" : ""}${avgTradePnL.toFixed(2)}
                       </span>
                     </div>
@@ -796,24 +1001,39 @@ export function Analytics({ trades }: AnalyticsProps) {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Best Trade:</span>
                       <span className="text-green-600">
-                        ${Math.max(...filteredTrades.map((t) => t.pnl)).toFixed(2)}
+                        $
+                        {Math.max(...filteredTrades.map((t) => t.pnl)).toFixed(
+                          2
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Worst Trade:</span>
+                      <span className="text-muted-foreground">
+                        Worst Trade:
+                      </span>
                       <span className="text-red-600">
                         {losingTrades.length > 0
-                          ? `-$${Math.max(...losingTrades.map((t) => Math.abs(t.pnl))).toFixed(2)}`
+                          ? `-$${Math.max(
+                              ...losingTrades.map((t) => Math.abs(t.pnl))
+                            ).toFixed(2)}`
                           : "$0.00"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Longest Win Streak:</span>
-                      <span className="text-green-600">{longestWinningStreak}</span>
+                      <span className="text-muted-foreground">
+                        Longest Win Streak:
+                      </span>
+                      <span className="text-green-600">
+                        {longestWinningStreak}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Longest Loss Streak:</span>
-                      <span className="text-red-600">{longestLosingStreak}</span>
+                      <span className="text-muted-foreground">
+                        Longest Loss Streak:
+                      </span>
+                      <span className="text-red-600">
+                        {longestLosingStreak}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -826,7 +1046,11 @@ export function Analytics({ trades }: AnalyticsProps) {
           {/* Calendar Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigateCalendarMonth("prev")}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigateCalendarMonth("prev")}
+              >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
@@ -834,11 +1058,19 @@ export function Analytics({ trades }: AnalyticsProps) {
                 {monthNames[calendarMonth]} {calendarYear}
               </h2>
 
-              <Button variant="ghost" size="sm" onClick={() => navigateCalendarMonth("next")}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigateCalendarMonth("next")}
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
 
-              <Button variant="outline" size="sm" onClick={() => setCalendarDate(new Date())}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCalendarDate(new Date())}
+              >
                 <Calendar className="h-4 w-4 mr-2" />
                 Today
               </Button>
@@ -848,13 +1080,20 @@ export function Analytics({ trades }: AnalyticsProps) {
               <span>
                 Monthly P&L:{" "}
                 <span
-                  className={`font-semibold ${calendarMonthlyPnL.totalPnL >= 0 ? "text-green-600" : "text-red-600"}`}
+                  className={`font-semibold ${
+                    calendarMonthlyPnL.totalPnL >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
                 >
                   ${calendarMonthlyPnL.totalPnL.toFixed(2)}
                 </span>
               </span>
               <span>
-                Trading Days: <span className="font-semibold">{calendarMonthlyPnL.totalDays}</span>
+                Trading Days:{" "}
+                <span className="font-semibold">
+                  {calendarMonthlyPnL.totalDays}
+                </span>
               </span>
             </div>
           </div>
@@ -864,14 +1103,16 @@ export function Analytics({ trades }: AnalyticsProps) {
             <div className="lg:col-span-3">
               {/* Day headers */}
               <div className="grid grid-cols-7 gap-1 mb-2">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                  <div
-                    key={day}
-                    className="h-8 flex items-center justify-center text-sm font-medium text-muted-foreground"
-                  >
-                    {day}
-                  </div>
-                ))}
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                  (day) => (
+                    <div
+                      key={day}
+                      className="h-8 flex items-center justify-center text-sm font-medium text-muted-foreground"
+                    >
+                      {day}
+                    </div>
+                  )
+                )}
               </div>
 
               {/* Calendar grid */}
@@ -882,8 +1123,12 @@ export function Analytics({ trades }: AnalyticsProps) {
                       <div
                         className={getDayCellStyling(day).className}
                         onClick={() => {
-                          const dateKey = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-                          setSelectedCalendarDate(selectedCalendarDate === dateKey ? null : dateKey)
+                          const dateKey = `${calendarYear}-${String(
+                            calendarMonth + 1
+                          ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                          setSelectedCalendarDate(
+                            selectedCalendarDate === dateKey ? null : dateKey
+                          );
                         }}
                       >
                         <span className="font-medium">{day}</span>
@@ -891,11 +1136,15 @@ export function Analytics({ trades }: AnalyticsProps) {
                           <div className="flex flex-col items-center mt-1">
                             <span
                               className={`text-xs font-semibold ${
-                                getDayCellStyling(day).dayData!.pnl >= 0 ? "text-green-600" : "text-red-600"
+                                getDayCellStyling(day).dayData!.pnl >= 0
+                                  ? "text-green-600"
+                                  : "text-red-600"
                               }`}
                             >
-                              {getDayCellStyling(day).dayData!.pnl >= 0 ? "+" : ""}$
-                              {getDayCellStyling(day).dayData!.pnl.toFixed(0)}
+                              {getDayCellStyling(day).dayData!.pnl >= 0
+                                ? "+"
+                                : ""}
+                              ${getDayCellStyling(day).dayData!.pnl.toFixed(0)}
                             </span>
                             <span className="text-xs text-muted-foreground">
                               {getDayCellStyling(day).dayData!.trades} trades
@@ -924,16 +1173,24 @@ export function Analytics({ trades }: AnalyticsProps) {
                   {selectedCalendarDate ? (
                     <div className="space-y-4">
                       <div>
-                        <h4 className="font-semibold">{selectedCalendarDate}</h4>
+                        <h4 className="font-semibold">
+                          {selectedCalendarDate}
+                        </h4>
                         {selectedDateTrades.length > 0 ? (
                           <div className="mt-2 space-y-2">
                             <div className="text-sm">
-                              <span className="text-muted-foreground">Total P&L: </span>
+                              <span className="text-muted-foreground">
+                                Total P&L:{" "}
+                              </span>
                               <span
                                 className={`font-semibold ${
                                   selectedDateTrades.reduce(
-                                    (sum, trade) => sum + (trade.outcome === "win" ? trade.pnl : -Math.abs(trade.pnl)),
-                                    0,
+                                    (sum, trade) =>
+                                      sum +
+                                      (trade.outcome === "win"
+                                        ? trade.pnl
+                                        : -Math.abs(trade.pnl)),
+                                    0
                                   ) >= 0
                                     ? "text-green-600"
                                     : "text-red-600"
@@ -942,21 +1199,33 @@ export function Analytics({ trades }: AnalyticsProps) {
                                 $
                                 {selectedDateTrades
                                   .reduce(
-                                    (sum, trade) => sum + (trade.outcome === "win" ? trade.pnl : -Math.abs(trade.pnl)),
-                                    0,
+                                    (sum, trade) =>
+                                      sum +
+                                      (trade.outcome === "win"
+                                        ? trade.pnl
+                                        : -Math.abs(trade.pnl)),
+                                    0
                                   )
                                   .toFixed(2)}
                               </span>
                             </div>
                             <div className="text-sm">
-                              <span className="text-muted-foreground">Trades: </span>
-                              <span className="font-semibold">{selectedDateTrades.length}</span>
+                              <span className="text-muted-foreground">
+                                Trades:{" "}
+                              </span>
+                              <span className="font-semibold">
+                                {selectedDateTrades.length}
+                              </span>
                             </div>
                             <div className="text-sm">
-                              <span className="text-muted-foreground">Win Rate: </span>
+                              <span className="text-muted-foreground">
+                                Win Rate:{" "}
+                              </span>
                               <span className="font-semibold">
                                 {(
-                                  (selectedDateTrades.filter((t) => t.outcome === "win").length /
+                                  (selectedDateTrades.filter(
+                                    (t) => t.outcome === "win"
+                                  ).length /
                                     selectedDateTrades.length) *
                                   100
                                 ).toFixed(1)}
@@ -965,7 +1234,9 @@ export function Analytics({ trades }: AnalyticsProps) {
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-muted-foreground mt-2">No trades on this day</p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            No trades on this day
+                          </p>
                         )}
                       </div>
 
@@ -974,13 +1245,23 @@ export function Analytics({ trades }: AnalyticsProps) {
                           <h5 className="font-medium text-sm">Trades:</h5>
                           <div className="space-y-2 max-h-48 overflow-y-auto">
                             {selectedDateTrades.map((trade) => (
-                              <div key={trade.id} className="p-2 border rounded text-xs">
+                              <div
+                                key={trade.id}
+                                className="p-2 border rounded text-xs"
+                              >
                                 <div className="flex justify-between items-center">
-                                  <span className="font-medium">{trade.symbol}</span>
+                                  <span className="font-medium">
+                                    {trade.symbol}
+                                  </span>
                                   <span
-                                    className={`font-semibold ${trade.outcome === "win" ? "text-green-600" : "text-red-600"}`}
+                                    className={`font-semibold ${
+                                      trade.outcome === "win"
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                    }`}
                                   >
-                                    {trade.outcome === "win" ? "+" : "-"}${Math.abs(trade.pnl).toFixed(2)}
+                                    {trade.outcome === "win" ? "+" : "-"}$
+                                    {Math.abs(trade.pnl).toFixed(2)}
                                   </span>
                                 </div>
                                 <div className="flex justify-between text-muted-foreground">
@@ -1006,7 +1287,9 @@ export function Analytics({ trades }: AnalyticsProps) {
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">Click on a calendar day to see trade details</p>
+                    <p className="text-sm text-muted-foreground">
+                      Click on a calendar day to see trade details
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -1021,7 +1304,9 @@ export function Analytics({ trades }: AnalyticsProps) {
                   <Calendar className="h-5 w-5 text-slate-400" />
                   <div>
                     <p className="text-sm text-slate-400">Number of days</p>
-                    <p className="text-2xl font-bold text-white">{calendarMonthlyPnL.totalDays}</p>
+                    <p className="text-2xl font-bold text-white">
+                      {calendarMonthlyPnL.totalDays}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -1036,7 +1321,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                     <p className="text-2xl font-bold text-white">
                       {Object.entries(calendarDailyPnL)
                         .filter(([date]) =>
-                          date.startsWith(`${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}`),
+                          date.startsWith(
+                            `${calendarYear}-${String(
+                              calendarMonth + 1
+                            ).padStart(2, "0")}`
+                          )
                         )
                         .reduce((sum, [, data]) => sum + data.trades, 0)}
                     </p>
@@ -1054,7 +1343,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                     <p className="text-2xl font-bold text-white">
                       {trades
                         .filter((trade) =>
-                          trade.date.startsWith(`${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}`),
+                          trade.date.startsWith(
+                            `${calendarYear}-${String(
+                              calendarMonth + 1
+                            ).padStart(2, "0")}`
+                          )
                         )
                         .reduce((sum, trade) => sum + trade.positionSize, 0)
                         .toFixed(2)}
@@ -1075,8 +1368,11 @@ export function Analytics({ trades }: AnalyticsProps) {
                       {trades
                         .filter(
                           (trade) =>
-                            trade.date.startsWith(`${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}`) &&
-                            trade.outcome === "win",
+                            trade.date.startsWith(
+                              `${calendarYear}-${String(
+                                calendarMonth + 1
+                              ).padStart(2, "0")}`
+                            ) && trade.outcome === "win"
                         )
                         .reduce((max, trade) => Math.max(max, trade.pnl), 0)
                         .toFixed(2)}
@@ -1097,10 +1393,16 @@ export function Analytics({ trades }: AnalyticsProps) {
                       {trades
                         .filter(
                           (trade) =>
-                            trade.date.startsWith(`${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}`) &&
-                            trade.outcome === "loss",
+                            trade.date.startsWith(
+                              `${calendarYear}-${String(
+                                calendarMonth + 1
+                              ).padStart(2, "0")}`
+                            ) && trade.outcome === "loss"
                         )
-                        .reduce((max, trade) => Math.max(max, Math.abs(trade.pnl)), 0)
+                        .reduce(
+                          (max, trade) => Math.max(max, Math.abs(trade.pnl)),
+                          0
+                        )
                         .toFixed(2)}
                     </p>
                   </div>
@@ -1111,5 +1413,290 @@ export function Analytics({ trades }: AnalyticsProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );                       );
+                        }}
+                      >
+                        <span className="font-medium">{day}</span>
+                        {getDayCellStyling(day).dayData && (
+                          <div className="flex flex-col items-center mt-1">
+                            <span
+                              className={`text-xs font-semibold ${
+                                getDayCellStyling(day).dayData!.pnl >= 0
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {getDayCellStyling(day).dayData!.pnl >= 0
+                                ? "+"
+                                : ""}
+                              ${getDayCellStyling(day).dayData!.pnl.toFixed(0)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {getDayCellStyling(day).dayData!.trades} trades
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="h-16"></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Selected Date Details */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {selectedCalendarDate ? "Day Details" : "Select a Day"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedCalendarDate ? (
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold">
+                          {selectedCalendarDate}
+                        </h4>
+                        {selectedDateTrades.length > 0 ? (
+                          <div className="mt-2 space-y-2">
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">
+                                Total P&L:{" "}
+                              </span>
+                              <span
+                                className={`font-semibold ${
+                                  selectedDateTrades.reduce(
+                                    (sum, trade) =>
+                                      sum +
+                                      (trade.outcome === "win"
+                                        ? trade.pnl
+                                        : -Math.abs(trade.pnl)),
+                                    0
+                                  ) >= 0
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                $
+                                {selectedDateTrades
+                                  .reduce(
+                                    (sum, trade) =>
+                                      sum +
+                                      (trade.outcome === "win"
+                                        ? trade.pnl
+                                        : -Math.abs(trade.pnl)),
+                                    0
+                                  )
+                                  .toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">
+                                Trades:{" "}
+                              </span>
+                              <span className="font-semibold">
+                                {selectedDateTrades.length}
+                              </span>
+                            </div>
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">
+                                Win Rate:{" "}
+                              </span>
+                              <span className="font-semibold">
+                                {(
+                                  (selectedDateTrades.filter(
+                                    (t) => t.outcome === "win"
+                                  ).length /
+                                    selectedDateTrades.length) *
+                                  100
+                                ).toFixed(1)}
+                                %
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            No trades on this day
+                          </p>
+                        )}
+                      </div>
+
+                      {selectedDateTrades.length > 0 && (
+                        <div className="space-y-2">
+                          <h5 className="font-medium text-sm">Trades:</h5>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {selectedDateTrades.map((trade) => (
+                              <div
+                                key={trade.id}
+                                className="p-2 border rounded text-xs"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium">
+                                    {trade.symbol}
+                                  </span>
+                                  <span
+                                    className={`font-semibold ${
+                                      trade.outcome === "win"
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                    }`}
+                                  >
+                                    {trade.outcome === "win" ? "+" : "-"}$
+                                    {Math.abs(trade.pnl).toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-muted-foreground">
+                                  <span>{trade.direction}</span>
+                                  <span>{trade.positionSize}</span>
+                                </div>
+                                {trade.tags.length > 0 && (
+                                  <div className="mt-1">
+                                    {trade.tags.slice(0, 2).map((tag) => (
+                                      <span
+                                        key={tag}
+                                        className="inline-block bg-muted px-1 py-0.5 rounded text-xs mr-1"
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Click on a calendar day to see trade details
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Summary Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-8">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-slate-400" />
+                  <div>
+                    <p className="text-sm text-slate-400">Number of days</p>
+                    <p className="text-2xl font-bold text-white">
+                      {calendarMonthlyPnL.totalDays}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Activity className="h-5 w-5 text-slate-400" />
+                  <div>
+                    <p className="text-sm text-slate-400">Total Trades Taken</p>
+                    <p className="text-2xl font-bold text-white">
+                      {Object.entries(calendarDailyPnL)
+                        .filter(([date]) =>
+                          date.startsWith(
+                            `${calendarYear}-${String(
+                              calendarMonth + 1
+                            ).padStart(2, "0")}`
+                          )
+                        )
+                        .reduce((sum, [, data]) => sum + data.trades, 0)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="h-5 w-5 text-slate-400" />
+                  <div>
+                    <p className="text-sm text-slate-400">Total Lots Used</p>
+                    <p className="text-2xl font-bold text-white">
+                      {trades
+                        .filter((trade) =>
+                          trade.date.startsWith(
+                            `${calendarYear}-${String(
+                              calendarMonth + 1
+                            ).padStart(2, "0")}`
+                          )
+                        )
+                        .reduce((sum, trade) => sum + trade.positionSize, 0)
+                        .toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="h-5 w-5 text-green-400" />
+                  <div>
+                    <p className="text-sm text-slate-400">Biggest Win</p>
+                    <p className="text-2xl font-bold text-green-400">
+                      $
+                      {trades
+                        .filter(
+                          (trade) =>
+                            trade.date.startsWith(
+                              `${calendarYear}-${String(
+                                calendarMonth + 1
+                              ).padStart(2, "0")}`
+                            ) && trade.outcome === "win"
+                        )
+                        .reduce((max, trade) => Math.max(max, trade.pnl), 0)
+                        .toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <TrendingDown className="h-5 w-5 text-red-400" />
+                  <div>
+                    <p className="text-sm text-slate-400">Biggest Loss</p>
+                    <p className="text-2xl font-bold text-red-400">
+                      $
+                      {trades
+                        .filter(
+                          (trade) =>
+                            trade.date.startsWith(
+                              `${calendarYear}-${String(
+                                calendarMonth + 1
+                              ).padStart(2, "0")}`
+                            ) && trade.outcome === "loss"
+                        )
+                        .reduce(
+                          (max, trade) => Math.max(max, Math.abs(trade.pnl)),
+                          0
+                        )
+                        .toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 }
