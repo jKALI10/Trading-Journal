@@ -10,21 +10,6 @@ export const metadata: Metadata = {
   title: "Trading Journal App",
   description:
     "Track your trades, analyze performance, and reflect on your trading journey",
-  icons: {
-    icon: [
-      { url: "/favicon.jpg", type: "image/svg+xml" },
-      {
-        url: "/favicon-light.jpg",
-        type: "image/svg+xml",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/favicon.jpg",
-        type: "image/svg+xml",
-        media: "(prefers-color-scheme: dark)",
-      },
-    ],
-  },
 };
 
 export default function RootLayout({
@@ -34,21 +19,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="icon" href="/favicon.jpg" type="image/svg+xml" />
-        <link
-          rel="icon"
-          href="/favicon-light.jpg"
-          type="image/svg+xml"
-          media="(prefers-color-scheme: light)"
-        />
-        <link
-          rel="icon"
-          href="/favicon.jpg"
-          type="image/svg+xml"
-          media="(prefers-color-scheme: dark)"
-        />
-      </head>
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
