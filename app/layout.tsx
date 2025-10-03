@@ -12,15 +12,17 @@ export const metadata: Metadata = {
     "Track your trades, analyze performance, and reflect on your trading journey",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.jpg", type: "image/svg+xml" },
       {
-        url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" fontSize="90">📊</text></svg>',
+        url: "/favicon-light.jpg",
+        type: "image/svg+xml",
+        media: "(prefers-color-scheme: light)",
       },
-    ],
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      {
+        url: "/favicon.jpg",
+        type: "image/svg+xml",
+        media: "(prefers-color-scheme: dark)",
+      },
     ],
   },
 };
@@ -33,23 +35,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.jpg" type="image/svg+xml" />
         <link
           rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/favicon-32x32.png"
+          href="/favicon-light.jpg"
+          type="image/svg+xml"
+          media="(prefers-color-scheme: light)"
         />
         <link
           rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/favicon-16x16.png"
-        />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon.png"
+          href="/favicon.jpg"
+          type="image/svg+xml"
+          media="(prefers-color-scheme: dark)"
         />
       </head>
       <body className={inter.className}>
