@@ -131,7 +131,11 @@ export function TradeDetailsModal({
                   <Package className="h-4 w-4" />
                   <span>Position Size</span>
                 </div>
-                <p className="text-lg font-medium">{trade.positionSize}</p>
+                <p className="text-lg font-medium">
+                  {Number.isFinite(trade.positionSize)
+                    ? trade.positionSize.toFixed(2)
+                    : "0.00"}
+                </p>
               </div>
 
               <div className="space-y-2">

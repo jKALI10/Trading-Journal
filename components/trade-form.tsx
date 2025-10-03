@@ -82,7 +82,7 @@ export function TradeForm({
     onSubmit({
       ...formData,
       direction: formData.direction as "long" | "short",
-      positionSize: Number.parseInt(formData.positionSize),
+      positionSize: Number.parseFloat(formData.positionSize), // Changed from parseInt to parseFloat
       outcome: formData.outcome as "win" | "loss",
       pnl: Number.parseFloat(formData.pnl),
       images,
@@ -239,12 +239,14 @@ export function TradeForm({
                 <Input
                   id="positionSize"
                   type="number"
-                  placeholder="100"
+                  step="0.01"
+                  placeholder="0.01"
                   value={formData.positionSize}
                   onChange={(e) =>
                     setFormData({ ...formData, positionSize: e.target.value })
                   }
                   required
+                  min="0.01"
                 />
               </div>
             </div>

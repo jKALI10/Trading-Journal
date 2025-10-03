@@ -233,7 +233,15 @@ export function TradeHistory({
                     </Button>
                   </TableHead>
                   <TableHead>Direction</TableHead>
-                  <TableHead>Size</TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("positionSize")}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Size <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
                   <TableHead>Outcome</TableHead>
                   <TableHead>
                     <Button
@@ -268,7 +276,11 @@ export function TradeHistory({
                         {trade.direction}
                       </Badge>
                     </TableCell>
-                    <TableCell>{trade.positionSize}</TableCell>
+                    <TableCell>
+                      {Number.isFinite(trade.positionSize)
+                        ? trade.positionSize.toFixed(2)
+                        : "0.00"}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={
