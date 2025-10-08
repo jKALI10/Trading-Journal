@@ -1,58 +1,43 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { X, Upload, ImageIcon } from "lucide-react";
+import type React from "react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { X, Upload, ImageIcon } from "lucide-react"
 
 interface Trade {
-  date: string;
-  symbol: string;
-  direction: "long" | "short";
-  positionSize: number;
-  notes: string;
-  tags: string[];
-  outcome: "win" | "loss";
-  pnl: number;
-  images?: string[];
+  date: string
+  symbol: string
+  direction: "long" | "short"
+  positionSize: number
+  notes: string
+  tags: string[]
+  outcome: "win" | "loss"
+  pnl: number
+  images?: string[]
 }
 
 interface TradeFormProps {
-  onSubmit: (trade: Trade) => void;
-  initialData?: Trade & { id: number };
-  isEditing?: boolean;
+  onSubmit: (trade: Trade) => void
+  initialData?: Trade & { id: number }
+  isEditing?: boolean
 }
 
 const SYMBOLS = [
   { value: "EUR/USD", label: "EUR/USD" },
   { value: "USD/JPY", label: "USD/JPY" },
+  { value: "GBP/USD", label: "GBP/USD" },
   { value: "GOLD", label: "GOLD" },
   { value: "OTHER", label: "Other (Manual Entry)" },
-];
+]
 
-export function TradeForm({
-  onSubmit,
-  initialData,
-  isEditing = false,
-}: TradeFormProps) {
+export function TradeForm({ onSubmit, initialData, isEditing = false }: TradeFormProps) {
   const [formData, setFormData] = useState({
     date: initialData?.date || new Date().toISOString().split("T")[0],
     symbol: initialData?.symbol || "",
@@ -62,23 +47,19 @@ export function TradeForm({
     tags: initialData?.tags || [],
     outcome: initialData?.outcome || "",
     pnl: initialData?.pnl?.toString() || "",
-  });
+  })
 
-  const [newTag, setNewTag] = useState("");
+  const [newTag, setNewTag] = useState("")
   const [customSymbol, setCustomSymbol] = useState(
-    initialData?.symbol && !SYMBOLS.some((s) => s.value === initialData.symbol)
-      ? initialData.symbol
-      : ""
-  );
+    initialData?.symbol && !SYMBOLS.some((s) => s.value === initialData.symbol) ? initialData.symbol : "",
+  )
   const [showCustomInput, setShowCustomInput] = useState(
-    initialData?.symbol
-      ? !SYMBOLS.some((s) => s.value === initialData.symbol)
-      : false
-  );
-  const [images, setImages] = useState<string[]>(initialData?.images || []);
+    initialData?.symbol ? !SYMBOLS.some((s) => s.value === initialData.symbol) : false,
+  )
+  const [images, setImages] = useState<string[]>(initialData?.images || [])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     onSubmit({
       ...formData,
       direction: formData.direction as "long" | "short",
@@ -86,7 +67,7 @@ export function TradeForm({
       outcome: formData.outcome as "win" | "loss",
       pnl: Number.parseFloat(formData.pnl),
       images,
-    });
+    })
 
     if (!isEditing) {
       setFormData({
@@ -98,60 +79,55 @@ export function TradeForm({
         tags: [],
         outcome: "",
         pnl: "",
-      });
-      setCustomSymbol("");
-      setShowCustomInput(false);
-      setImages([]);
+      })
+      setCustomSymbol("")
+      setShowCustomInput(false)
+      setImages([])
     }
-  };
+  }
 
   const addTag = () => {
     if (newTag && !formData.tags.includes(newTag)) {
-      setFormData({ ...formData, tags: [...formData.tags, newTag] });
-      setNewTag("");
+      setFormData({ ...formData, tags: [...formData.tags, newTag] })
+      setNewTag("")
     }
-  };
+  }
 
   const removeTag = (tagToRemove: string) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter((tag) => tag !== tagToRemove),
-    });
-  };
+    setFormData({ ...formData, tags: formData.tags.filter((tag) => tag !== tagToRemove) })
+  }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+    const files = e.target.files
+    if (!files) return
 
     Array.from(files).forEach((file) => {
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should be less than 5MB");
-        return;
+        alert("Image size should be less than 5MB")
+        return
       }
 
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setImages((prev) => [...prev, base64String]);
-      };
-      reader.readAsDataURL(file);
-    });
+        const base64String = reader.result as string
+        setImages((prev) => [...prev, base64String])
+      }
+      reader.readAsDataURL(file)
+    })
 
-    e.target.value = "";
-  };
+    e.target.value = ""
+  }
 
   const removeImage = (indexToRemove: number) => {
-    setImages((prev) => prev.filter((_, index) => index !== indexToRemove));
-  };
+    setImages((prev) => prev.filter((_, index) => index !== indexToRemove))
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
           <CardTitle>{isEditing ? "Edit Trade" : "Add New Trade"}</CardTitle>
-          <CardDescription>
-            Record your trade details for analysis
-          </CardDescription>
+          <CardDescription>Record your trade details for analysis</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -162,9 +138,7 @@ export function TradeForm({
                   id="date"
                   type="date"
                   value={formData.date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, date: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   required
                 />
               </div>
@@ -172,17 +146,15 @@ export function TradeForm({
               <div className="space-y-2">
                 <Label htmlFor="symbol">Symbol</Label>
                 <Select
-                  value={
-                    formData.symbol === "OTHER" ? "OTHER" : formData.symbol
-                  }
+                  value={formData.symbol === "OTHER" ? "OTHER" : formData.symbol}
                   onValueChange={(value) => {
                     if (value === "OTHER") {
-                      setShowCustomInput(true);
-                      setFormData({ ...formData, symbol: "OTHER" });
+                      setShowCustomInput(true)
+                      setFormData({ ...formData, symbol: "OTHER" })
                     } else {
-                      setShowCustomInput(false);
-                      setCustomSymbol("");
-                      setFormData({ ...formData, symbol: value });
+                      setShowCustomInput(false)
+                      setCustomSymbol("")
+                      setFormData({ ...formData, symbol: value })
                     }
                   }}
                 >
@@ -204,9 +176,9 @@ export function TradeForm({
                       placeholder="Enter symbol (e.g., GBP/USD, BTC/USD, AAPL)"
                       value={customSymbol}
                       onChange={(e) => {
-                        const value = e.target.value.toUpperCase();
-                        setCustomSymbol(value);
-                        setFormData({ ...formData, symbol: value });
+                        const value = e.target.value.toUpperCase()
+                        setCustomSymbol(value)
+                        setFormData({ ...formData, symbol: value })
                       }}
                       required
                     />
@@ -220,9 +192,7 @@ export function TradeForm({
                 <Label htmlFor="direction">Direction</Label>
                 <Select
                   value={formData.direction}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, direction: value })
-                  }
+                  onValueChange={(value) => setFormData({ ...formData, direction: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select direction" />
@@ -242,9 +212,7 @@ export function TradeForm({
                   step="0.01"
                   placeholder="0.01"
                   value={formData.positionSize}
-                  onChange={(e) =>
-                    setFormData({ ...formData, positionSize: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, positionSize: e.target.value })}
                   required
                   min="0.01"
                 />
@@ -256,9 +224,7 @@ export function TradeForm({
                 <Label htmlFor="outcome">Outcome</Label>
                 <Select
                   value={formData.outcome}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, outcome: value })
-                  }
+                  onValueChange={(value) => setFormData({ ...formData, outcome: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select outcome" />
@@ -278,9 +244,7 @@ export function TradeForm({
                   step="0.01"
                   placeholder="0.00"
                   value={formData.pnl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, pnl: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, pnl: e.target.value })}
                   required
                 />
               </div>
@@ -292,9 +256,7 @@ export function TradeForm({
                 id="notes"
                 placeholder="Strategy used, market conditions, reasoning..."
                 value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
               />
             </div>
@@ -306,9 +268,7 @@ export function TradeForm({
                   placeholder="Add tag..."
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={(e) =>
-                    e.key === "Enter" && (e.preventDefault(), addTag())
-                  }
+                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
                 />
                 <Button type="button" onClick={addTag} variant="outline">
                   Add
@@ -316,16 +276,9 @@ export function TradeForm({
               </div>
               <div className="flex flex-wrap gap-2">
                 {formData.tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
+                  <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                     {tag}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => removeTag(tag)}
-                    />
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
                   </Badge>
                 ))}
               </div>
@@ -348,9 +301,7 @@ export function TradeForm({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() =>
-                    document.getElementById("image-upload")?.click()
-                  }
+                  onClick={() => document.getElementById("image-upload")?.click()}
                   className="w-full"
                 >
                   <Upload className="h-4 w-4 mr-2" />
@@ -379,8 +330,7 @@ export function TradeForm({
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Upload charts, setups, or any relevant screenshots (Max 5MB
-                  per image)
+                  Upload charts, setups, or any relevant screenshots (Max 5MB per image)
                 </p>
               </div>
             </div>
@@ -392,5 +342,5 @@ export function TradeForm({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
