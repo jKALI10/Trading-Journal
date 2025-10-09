@@ -32,8 +32,9 @@ interface Trade {
   positionSize: number
   notes: string
   tags: string[]
-  outcome: "win" | "loss"
+  outcome: "win" | "loss" | "be" // Updated outcome to include "be"
   pnl: number
+  images?: string[]
 }
 
 interface JournalEntry {
@@ -156,9 +157,10 @@ export default function TradingJournal() {
     // Update balance based on trade outcome
     if (trade.outcome === "win") {
       setBalance((prev) => prev + trade.pnl)
-    } else {
+    } else if (trade.outcome === "loss") {
       setBalance((prev) => prev - Math.abs(trade.pnl))
     }
+    // For break-even trades (outcome === "be"), don't change balance
   }
 
   const updateTrade = (updatedTrade: Trade) => {
@@ -167,16 +169,18 @@ export default function TradingJournal() {
       // Reverse the old trade's effect on balance
       if (oldTrade.outcome === "win") {
         setBalance((prev) => prev - oldTrade.pnl)
-      } else {
+      } else if (oldTrade.outcome === "loss") {
         setBalance((prev) => prev + Math.abs(oldTrade.pnl))
       }
+      // For break-even, no balance change needed
 
       // Apply the new trade's effect on balance
       if (updatedTrade.outcome === "win") {
         setBalance((prev) => prev + updatedTrade.pnl)
-      } else {
+      } else if (updatedTrade.outcome === "loss") {
         setBalance((prev) => prev - Math.abs(updatedTrade.pnl))
       }
+      // For break-even, no balance change needed
     }
 
     setTrades(trades.map((trade) => (trade.id === updatedTrade.id ? updatedTrade : trade)))
@@ -188,9 +192,10 @@ export default function TradingJournal() {
       // Reverse the trade's effect on balance
       if (trade.outcome === "win") {
         setBalance((prev) => prev - trade.pnl)
-      } else {
+      } else if (trade.outcome === "loss") {
         setBalance((prev) => prev + Math.abs(trade.pnl))
       }
+      // For break-even, no balance change needed
     }
     setTrades(trades.filter((trade) => trade.id !== tradeId))
   }
@@ -269,6 +274,8 @@ export default function TradingJournal() {
   const totalDeposits = deposits.reduce((sum, deposit) => sum + deposit.amount, 0)
   const tradingPnL = balance - totalDeposits
   const winningTrades = trades.filter((trade) => trade.outcome === "win")
+  const losingTrades = trades.filter((trade) => trade.outcome === "loss")
+  const breakEvenTrades = trades.filter((trade) => trade.outcome === "be")
   const winRate = trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0
 
   const renderContent = () => {
@@ -392,7 +399,7 @@ export default function TradingJournal() {
                           <div key={trade.id} className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
                               <div
-                                className={`w-2 h-2 rounded-full ${trade.outcome === "win" ? "bg-green-500" : "bg-red-500"}`}
+                                className={`w-2 h-2 rounded-full ${trade.outcome === "win" ? "bg-green-500" : trade.outcome === "loss" ? "bg-red-500" : "bg-yellow-500"}`}
                               />
                               <div>
                                 <p className="font-medium">{trade.symbol}</p>
@@ -401,9 +408,10 @@ export default function TradingJournal() {
                             </div>
                             <div className="text-right">
                               <p
-                                className={`font-medium ${trade.outcome === "win" ? "text-green-600" : "text-red-600"}`}
+                                className={`font-medium ${trade.outcome === "win" ? "text-green-600" : trade.outcome === "loss" ? "text-red-600" : "text-yellow-600"}`}
                               >
-                                {trade.outcome === "win" ? "+" : "-"}${Math.abs(trade.pnl).toFixed(2)}
+                                {trade.outcome === "win" ? "+" : trade.outcome === "loss" ? "-" : ""}$
+                                {Math.abs(trade.pnl).toFixed(2)}
                               </p>
                               <Badge variant={trade.direction === "long" ? "default" : "secondary"}>
                                 {trade.direction}
@@ -428,7 +436,11 @@ export default function TradingJournal() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Losing Trades</span>
-                        <span className="font-medium text-red-600">{trades.length - winningTrades.length}</span>
+                        <span className="font-medium text-red-600">{losingTrades.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Break-Even Trades</span>
+                        <span className="font-medium text-yellow-600">{breakEvenTrades.length}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Best Trade</span>

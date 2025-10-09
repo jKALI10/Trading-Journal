@@ -18,7 +18,7 @@ interface Trade {
   positionSize: number
   notes: string
   tags: string[]
-  outcome: "win" | "loss"
+  outcome: "win" | "loss" | "be"
   pnl: number
   images?: string[]
 }
@@ -63,8 +63,8 @@ export function TradeForm({ onSubmit, initialData, isEditing = false }: TradeFor
     onSubmit({
       ...formData,
       direction: formData.direction as "long" | "short",
-      positionSize: Number.parseFloat(formData.positionSize), // Changed from parseInt to parseFloat
-      outcome: formData.outcome as "win" | "loss",
+      positionSize: Number.parseFloat(formData.positionSize),
+      outcome: formData.outcome as "win" | "loss" | "be",
       pnl: Number.parseFloat(formData.pnl),
       images,
     })
@@ -232,6 +232,7 @@ export function TradeForm({ onSubmit, initialData, isEditing = false }: TradeFor
                   <SelectContent>
                     <SelectItem value="win">Win</SelectItem>
                     <SelectItem value="loss">Loss</SelectItem>
+                    <SelectItem value="be">BE (Break Even)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

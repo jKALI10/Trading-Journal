@@ -1,54 +1,65 @@
-"use client";
+"use client"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Package,
-  Tag,
-  FileText,
-  ImageIcon,
-} from "lucide-react";
-import { useState } from "react";
-import { TradeImageViewer } from "./trade-image-viewer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Calendar, TrendingUp, TrendingDown, DollarSign, Package, Tag, FileText, ImageIcon } from "lucide-react"
+import { useState } from "react"
+import { TradeImageViewer } from "./trade-image-viewer"
 
 interface Trade {
-  id: number;
-  date: string;
-  symbol: string;
-  direction: "long" | "short";
-  positionSize: number;
-  notes: string;
-  tags: string[];
-  outcome: "win" | "loss";
-  pnl: number;
-  images?: string[];
+  id: number
+  date: string
+  symbol: string
+  direction: "long" | "short"
+  positionSize: number
+  notes: string
+  tags: string[]
+  outcome: "win" | "loss" | "be"
+  pnl: number
+  images?: string[]
 }
 
 interface TradeDetailsModalProps {
-  trade: Trade | null;
-  isOpen: boolean;
-  onClose: () => void;
+  trade: Trade | null
+  isOpen: boolean
+  onClose: () => void
 }
 
-export function TradeDetailsModal({
-  trade,
-  isOpen,
-  onClose,
-}: TradeDetailsModalProps) {
-  const [showImageViewer, setShowImageViewer] = useState(false);
+export function TradeDetailsModal({ trade, isOpen, onClose }: TradeDetailsModalProps) {
+  const [showImageViewer, setShowImageViewer] = useState(false)
 
-  if (!trade) return null;
+  if (!trade) return null
+
+  const getOutcomeBadgeVariant = (outcome: "win" | "loss" | "be") => {
+    if (outcome === "win") return "default"
+    if (outcome === "loss") return "destructive"
+    return "secondary"
+  }
+
+  const getOutcomeDisplay = (outcome: "win" | "loss" | "be") => {
+    if (outcome === "be") return "BE"
+    return outcome.toUpperCase()
+  }
+
+  const getOutcomeColor = (outcome: "win" | "loss" | "be") => {
+    if (outcome === "win") return "bg-green-50 dark:bg-green-950/30"
+    if (outcome === "loss") return "bg-red-50 dark:bg-red-950/30"
+    return "bg-slate-50 dark:bg-slate-950/30"
+  }
+
+  const getOutcomeIconColor = (outcome: "win" | "loss" | "be") => {
+    if (outcome === "win") return "text-green-600"
+    if (outcome === "loss") return "text-red-600"
+    return "text-slate-600"
+  }
+
+  const getOutcomeTextColor = (outcome: "win" | "loss" | "be") => {
+    if (outcome === "win") return "text-green-600"
+    if (outcome === "loss") return "text-red-600"
+    return "text-slate-600"
+  }
 
   return (
     <>
@@ -57,44 +68,24 @@ export function TradeDetailsModal({
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
               <span>{trade.symbol}</span>
-              <Badge
-                variant={trade.outcome === "win" ? "default" : "destructive"}
-                className="text-sm"
-              >
-                {trade.outcome.toUpperCase()}
+              <Badge variant={getOutcomeBadgeVariant(trade.outcome)} className="text-sm">
+                {getOutcomeDisplay(trade.outcome)}
               </Badge>
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             {/* P&L Section */}
-            <div
-              className={`p-6 rounded-lg ${
-                trade.outcome === "win"
-                  ? "bg-green-50 dark:bg-green-950/30"
-                  : "bg-red-50 dark:bg-red-950/30"
-              }`}
-            >
+            <div className={`p-6 rounded-lg ${getOutcomeColor(trade.outcome)}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <DollarSign
-                    className={`h-6 w-6 ${
-                      trade.outcome === "win"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    Profit & Loss
-                  </span>
+                  <DollarSign className={`h-6 w-6 ${getOutcomeIconColor(trade.outcome)}`} />
+                  <span className="text-sm text-muted-foreground">Profit & Loss</span>
                 </div>
-                <div
-                  className={`text-3xl font-bold ${
-                    trade.outcome === "win" ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {trade.outcome === "win" ? "+" : "-"}$
-                  {Math.abs(trade.pnl).toFixed(2)}
+                <div className={`text-3xl font-bold ${getOutcomeTextColor(trade.outcome)}`}>
+                  {trade.outcome === "be"
+                    ? "$0.00"
+                    : `${trade.outcome === "win" ? "+" : "-"}$${Math.abs(trade.pnl).toFixed(2)}`}
                 </div>
               </div>
             </div>
@@ -118,10 +109,7 @@ export function TradeDetailsModal({
                   )}
                   <span>Direction</span>
                 </div>
-                <Badge
-                  variant={trade.direction === "long" ? "default" : "secondary"}
-                  className="text-base"
-                >
+                <Badge variant={trade.direction === "long" ? "default" : "secondary"} className="text-base">
                   {trade.direction.toUpperCase()}
                 </Badge>
               </div>
@@ -132,9 +120,7 @@ export function TradeDetailsModal({
                   <span>Position Size</span>
                 </div>
                 <p className="text-lg font-medium">
-                  {Number.isFinite(trade.positionSize)
-                    ? trade.positionSize.toFixed(2)
-                    : "0.00"}
+                  {Number.isFinite(trade.positionSize) ? trade.positionSize.toFixed(2) : "0.00"}
                 </p>
               </div>
 
@@ -151,9 +137,7 @@ export function TradeDetailsModal({
                       </Badge>
                     ))
                   ) : (
-                    <span className="text-sm text-muted-foreground">
-                      No tags
-                    </span>
+                    <span className="text-sm text-muted-foreground">No tags</span>
                   )}
                 </div>
               </div>
@@ -182,11 +166,7 @@ export function TradeDetailsModal({
                     <ImageIcon className="h-4 w-4" />
                     <span>Trade Screenshots ({trade.images.length})</span>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowImageViewer(true)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setShowImageViewer(true)}>
                     View All
                   </Button>
                 </div>
@@ -223,5 +203,5 @@ export function TradeDetailsModal({
         />
       )}
     </>
-  );
+  )
 }
