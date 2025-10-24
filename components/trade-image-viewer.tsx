@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from "lucide-react";
@@ -50,11 +51,11 @@ export function TradeImageViewer({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[95vh] p-0">
         <DialogHeader className="px-6 pt-6">
-          <DialogTitle className="flex items-center justify-between">
-            <span>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex-1">
               {tradeName || "Trade Screenshots"} ({currentIndex + 1} /{" "}
               {images.length})
-            </span>
+            </DialogTitle>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -74,7 +75,10 @@ export function TradeImageViewer({
                 <ZoomIn className="h-4 w-4" />
               </Button>
             </div>
-          </DialogTitle>
+          </div>
+          <DialogDescription>
+            View and zoom through your trade screenshots
+          </DialogDescription>
         </DialogHeader>
         <div className="relative flex items-center justify-center bg-muted/30 min-h-[60vh] overflow-auto p-4">
           <img
