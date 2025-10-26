@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
   BarChart3,
   BookOpen,
@@ -41,6 +42,8 @@ import { BalanceManager } from "@/components/balance-manager";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DataManager } from "@/components/data-manager";
 import { PortfolioManagement } from "@/components/portfolio-management";
+import { LoginPage } from "@/components/login-page";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Trade {
   id: number;
@@ -77,6 +80,7 @@ const navigationItems = [
 ];
 
 export default function TradingJournal() {
+  const { isAuthenticated, logout, isLoaded } = useAuth();
   const [activeView, setActiveView] = useState("dashboard");
   const [trades, setTrades] = useState<Trade[]>([]);
   const [balance, setBalance] = useState(0);
@@ -84,9 +88,8 @@ export default function TradingJournal() {
     { id: number; amount: number; date: string }[]
   >([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Load data from localStorage on component mount
   useEffect(() => {
     const savedTrades = localStorage.getItem("trading-journal-trades");
     const savedBalance = localStorage.getItem("trading-journal-balance");
@@ -130,54 +133,38 @@ export default function TradingJournal() {
       }
     }
 
-    setIsLoaded(true);
+    setDataLoaded(true);
   }, []);
 
-  // Save trades to localStorage whenever trades change
   useEffect(() => {
-    if (isLoaded) {
+    if (dataLoaded) {
       localStorage.setItem("trading-journal-trades", JSON.stringify(trades));
     }
-  }, [trades, isLoaded]);
+  }, [trades, dataLoaded]);
 
-  // Save balance to localStorage whenever balance changes
   useEffect(() => {
-    if (isLoaded) {
+    if (dataLoaded) {
       localStorage.setItem("trading-journal-balance", balance.toString());
     }
-  }, [balance, isLoaded]);
+  }, [balance, dataLoaded]);
 
-  // Save deposits to localStorage whenever deposits change
   useEffect(() => {
-    if (isLoaded) {
+    if (dataLoaded) {
       localStorage.setItem(
         "trading-journal-deposits",
         JSON.stringify(deposits)
       );
     }
-  }, [deposits, isLoaded]);
+  }, [deposits, dataLoaded]);
 
-  // Save journal entries to localStorage whenever journalEntries change
   useEffect(() => {
-    if (isLoaded) {
+    if (dataLoaded) {
       localStorage.setItem(
         "trading-journal-journal-entries",
         JSON.stringify(journalEntries)
       );
     }
-  }, [journalEntries, isLoaded]);
-
-  // Show loading state while data is being loaded
-  if (!isLoaded) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your trading data...</p>
-        </div>
-      </div>
-    );
-  }
+  }, [journalEntries, dataLoaded]);
 
   const addTrade = (newTrade: Omit<Trade, "id">) => {
     const trade: Trade = {
@@ -603,41 +590,81 @@ export default function TradingJournal() {
     }
   };
 
+  if (!isLoaded) {
+    return (
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full items-center justify-center">
+          <p>Loading...</p>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <Sidebar>
-          <SidebarHeader>
-            <div className="flex items-center justify-between px-4 py-2">
-              <h2 className="text-lg font-semibold">Trading Journal</h2>
-              <ThemeToggle />
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu>
-              {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    onClick={() => setActiveView(item.id)}
-                    isActive={activeView === item.id}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
+        {isAuthenticated ? (
+          <>
+            <Sidebar>
+              <SidebarHeader>
+                <div className="flex items-center justify-between px-4 py-2">
+                  <h2 className="text-lg font-semibold">Trading Journal</h2>
+                  <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={logout}
+                      title="Logout"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                    </Button>
+                  </div>
+                </div>
+              </SidebarHeader>
+              <SidebarContent>
+                <SidebarMenu>
+                  {navigationItems.map((item) => (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        onClick={() => setActiveView(item.id)}
+                        isActive={activeView === item.id}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarContent>
+            </Sidebar>
 
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-          </header>
+            <SidebarInset>
+              <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+              </header>
 
-          <main className="flex-1 p-6">{renderContent()}</main>
-        </SidebarInset>
+              <main className="flex-1 p-6">
+                {dataLoaded ? renderContent() : null}
+              </main>
+            </SidebarInset>
+          </>
+        ) : (
+          <LoginPage />
+        )}
       </div>
     </SidebarProvider>
   );
