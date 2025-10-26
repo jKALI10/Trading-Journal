@@ -634,62 +634,171 @@ export function PortfolioManagement({
         </CardContent>
       </Card>
 
-      {/* Monthly Profit/Loss Percentage View */}
+      {/* Monthly Returns Calendar View */}
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Returns</CardTitle>
-          <CardDescription>
-            Monthly return on investment percentage
-          </CardDescription>
+          <CardTitle>Monthly Returns Calendar</CardTitle>
+          <CardDescription>Return on investment by month</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-6">
-            {monthlyData.map((month) => {
-              const roi =
-                accountStartBalance > 0
-                  ? ((month.pnl / accountStartBalance) * 100).toFixed(1)
-                  : "0";
-              const roiValue = Number.parseFloat(roi);
-              const monthName = new Date(
-                `${month.month}-01`
-              ).toLocaleDateString("en-US", { month: "short" });
+          {monthlyData.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p>No monthly data available. Add some trades to see returns.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Group months by year */}
+              {Array.from(
+                new Set(monthlyData.map((m) => m.month.substring(0, 4)))
+              ).map((year) => {
+                const yearMonths = monthlyData.filter((m) =>
+                  m.month.startsWith(year)
+                );
+                const monthNames = [
+                  "Jan",
+                  "Feb",
+                  "Mar",
+                  "Apr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Aug",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dec",
+                ];
 
-              return (
-                <div
-                  key={month.month}
-                  className={`p-4 rounded-lg border-2 text-center transition-all ${
-                    roiValue > 0
-                      ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
-                      : roiValue < 0
-                      ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800"
-                      : "bg-slate-50 dark:bg-slate-950/30 border-slate-200 dark:border-slate-800"
-                  }`}
-                >
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    {monthName}
-                  </p>
-                  <div
-                    className={`text-2xl font-bold ${
-                      roiValue > 0
-                        ? "text-green-600"
-                        : roiValue < 0
-                        ? "text-red-600"
-                        : "text-slate-600"
-                    }`}
-                  >
-                    {roiValue > 0 ? "+" : ""}
-                    {roi}%
+                return (
+                  <div key={year} className="space-y-3">
+                    <h3 className="text-lg font-semibold">{year}</h3>
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                      {monthNames.map((monthName, monthIndex) => {
+                        const monthKey = `${year}-${String(
+                          monthIndex + 1
+                        ).padStart(2, "0")}`;
+                        const monthData = yearMonths.find(
+                          (m) => m.month === monthKey
+                        );
+
+                        if (!monthData) {
+                          return (
+                            <div
+                              key={monthKey}
+                              className="p-4 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/20 text-center opacity-50"
+                            >
+                              <p className="text-xs font-medium text-muted-foreground">
+                                {monthName}
+                              </p>
+                              <p className="text-sm text-muted-foreground">-</p>
+                            </div>
+                          );
+                        }
+
+                        const roi =
+                          accountStartBalance > 0
+                            ? (
+                                (monthData.pnl / accountStartBalance) *
+                                100
+                              ).toFixed(1)
+                            : "0";
+                        const roiValue = Number.parseFloat(roi);
+
+                        return (
+                          <div
+                            key={monthKey}
+                            className={`p-3 rounded-lg border-2 text-center transition-all cursor-pointer hover:shadow-md ${
+                              roiValue > 0
+                                ? "bg-green-50 dark:bg-green-950/40 border-green-300 dark:border-green-700"
+                                : roiValue < 0
+                                ? "bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-700"
+                                : "bg-slate-50 dark:bg-slate-950/40 border-slate-300 dark:border-slate-700"
+                            }`}
+                          >
+                            <p className="text-xs font-medium text-muted-foreground mb-1">
+                              {monthName}
+                            </p>
+                            <div
+                              className={`text-lg font-bold ${
+                                roiValue > 0
+                                  ? "text-green-600 dark:text-green-400"
+                                  : roiValue < 0
+                                  ? "text-red-600 dark:text-red-400"
+                                  : "text-slate-600 dark:text-slate-400"
+                              }`}
+                            >
+                              {roiValue > 0 ? "+" : ""}
+                              {roi}%
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              ${monthData.pnl.toFixed(0)}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    ${month.pnl.toFixed(2)}
-                  </p>
+                );
+              })}
+
+              {/* Summary */}
+              <div className="pt-4 border-t space-y-3">
+                <h4 className="font-semibold">Summary</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                    <p className="text-muted-foreground text-xs">
+                      Positive Months
+                    </p>
+                    <p className="text-lg font-semibold text-green-600">
+                      {
+                        monthlyData.filter((m) =>
+                          accountStartBalance > 0
+                            ? (m.pnl / accountStartBalance) * 100 > 0
+                            : false
+                        ).length
+                      }
+                    </p>
+                  </div>
+                  <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
+                    <p className="text-muted-foreground text-xs">
+                      Negative Months
+                    </p>
+                    <p className="text-lg font-semibold text-red-600">
+                      {
+                        monthlyData.filter((m) =>
+                          accountStartBalance > 0
+                            ? (m.pnl / accountStartBalance) * 100 < 0
+                            : false
+                        ).length
+                      }
+                    </p>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-950/30 rounded-lg">
+                    <p className="text-muted-foreground text-xs">
+                      Break-Even Months
+                    </p>
+                    <p className="text-lg font-semibold text-slate-600">
+                      {
+                        monthlyData.filter((m) =>
+                          accountStartBalance > 0
+                            ? Math.abs((m.pnl / accountStartBalance) * 100) <
+                              0.01
+                            : false
+                        ).length
+                      }
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                    <p className="text-muted-foreground text-xs">
+                      Total Months
+                    </p>
+                    <p className="text-lg font-semibold text-blue-600">
+                      {monthlyData.length}
+                    </p>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-          {monthlyData.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No monthly data available. Add some trades to see returns.
+              </div>
             </div>
           )}
         </CardContent>
